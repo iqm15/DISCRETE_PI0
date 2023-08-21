@@ -1,0 +1,183 @@
+---
+title: "polynomial estimator"
+output: html_document
+---
+```{r}
+source("../../code/scripts/utils.R")
+library(ggplot2)
+```
+
+```{r}
+pi0 = 0.6
+mu1 = 0.5
+lambda = 0.05
+
+```
+
+# we vary the number of tests performed m, and look for the best polynome degree with regards to the MSE 
+```{r}
+r_grid <- seq(0, 20, 1)
+m_grid = c(10^(2:5))
+# m0_grid = pi0 * m_grid
+
+```
+
+```{r}
+# optimization function that takes r as parameter and returns the mse of the hybrid Storey-Polynomial estimator of degree r 
+
+
+# mse_poly_estim <- function(r, m, mu1, lambda, m0){
+#   
+#   nullexp_r <-  (1 - (lambda)**(r + 1)) / (r + 1) 
+#   nullvar_r <- ((1 - (lambda)**(2*r + 1)) / (2*r + 1))  - nullexp_r**2
+#   
+#   altexp_r <- integrate(integrand_exp, 0, 1, mu1, g_poly, lambda, r)$value
+#   altvar_r <- integrate(integrand_var, 0, 1,  mu1, g_poly, lambda, r)$value
+#   
+#   return(mse(m, m0, altexp_r, nullvar_r, altvar_r, nullexp_r) )
+# }
+
+```
+
+```{r}
+
+# r_opt <- c()
+# mse_opt <- c()
+# 
+# 
+# for (m in m_grid) {
+#   
+#   m0 = pi0 * m
+#   
+#   optim <- optimize(mse_poly_estim, seq(0, 50, 1), m, mu1, lambda, m0, lower = 1, upper = 50, maximum = FALSE)
+#   
+#   mse_opt <- c(mse_opt, optim$objective)
+#   r_opt <- c(r_opt, optim$minimum)
+# }
+```
+
+
+
+
+```{r}
+# plot(m_grid, r_opt)
+```
+
+```{r}
+# plot(m_grid, mse_opt)
+```
+
+
+
+
+```{r}
+exp_r <- c()
+var_r <- c()
+
+for (r_ in r_grid) {
+  exp_r <- c(exp_r, integrate(integrand_exp, 0, 1, mu1, g_poly, lambda, r_)$value)
+  var_r <- c(var_r, integrate(integrand_var, 0, 1,  mu1, g_poly, lambda, r_)$value)
+}
+```
+
+```{r}
+nullexp_r <- sapply(r_grid, function(r) { (1 - (lambda)**(r + 1)) / (r + 1) })
+nullvar_r <- sapply(r_grid, function(r) { (1 - (lambda)**(2*r + 1)) / (2*r + 1) }) - nullexp_r**2
+
+```
+
+```{r}
+datas <- list()
+for (i in c(1:length(m_grid))) {
+  m0 = pi0 * m_grid[i]
+  mse_r <- mse(m_grid[i], m0, exp_r, nullvar_r, var_r, nullexp_r)
+  mse_data <- data.frame(c(mse_r))
+  names(mse_data)[1] <- "mse_r"
+  mse_data["r"] <- r_grid
+  mse_data["m_value"] <- rep(m_grid[i], length(r_grid))
+  datas[[i]] <- mse_data
+}
+```
+
+```{r}
+df <- rbind(datas[[1]], datas[[2]], datas[[3]], datas[[4]])
+df$m_value <- as.character(df$m_value)
+df
+```
+
+```{r}
+plot_mse <- ggplot(data = df, aes(x=r, y=mse_r, color = m_value)) +
+            geom_line()
+
+plot_mse
+```
+
+```{r}
+lambda_grid <- seq(0, 1, 0.01)
+r = 5
+```
+
+```{r}
+exp_lambda <- c()
+var_lambda <- c()
+
+for (lambda_ in lambda_grid) {
+  exp_lambda <- c(exp_lambda, integrate(integrand_exp, 0, 1, mu1, g_poly, lambda_, r)$value)
+  var_lambda <- c(var_lambda, integrate(integrand_var, 0, 1,  mu1, g_poly, lambda_, r)$value)
+}
+```
+
+```{r}
+
+nullexp_lambda <- sapply(lambda_grid, function(lambda) { (1 - (lambda)**(r + 1)) / (r + 1) })
+nullvar_lambda <- sapply(lambda_grid, function(lambda) { (1 - (lambda)**(2*r + 1)) / (2*r + 1) }) - nullexp_lambda**2
+```
+
+```{r}
+datas_2 <- list()
+for (i in c(2:length(m_grid))) {
+  print(m_grid[i])
+  m0 = pi0 * m_grid[i]
+  mse_lambda <- mse(m_grid[i], m0, exp_lambda, nullvar_lambda, var_lambda, nullexp_lambda)
+  mse_data <- data.frame(c(mse_lambda))
+  names(mse_data)[1] <- "mse_lambda"
+  mse_data["lambda"] <- lambda_grid
+  mse_data["m_value"] <- rep(m_grid[i], length(lambda_grid))
+  datas_2[[i]] <- mse_data
+}
+```
+
+```{r}
+df_2 <- rbind(datas_2[[2]], datas_2[[3]], datas_2[[4]])
+df_2$m_value <- as.character(df_2$m_value)
+df_2
+```
+
+```{r}
+plot_mse <- ggplot(data = df_2, aes(x=lambda, y=mse_lambda, color = m_value)) +
+            geom_line()
+
+plot_mse
+```
+
+
+```{r}
+# mse_lambda <- mse(m, m0, exp_lambda, nullvar_lambda, var_lambda, nullexp_lambda) 
+# 
+# 
+# mse_data_2 <- data.frame(c(mse_lambda))
+# names(mse_data_2)[1] <- "mse_lambda"
+# # mse_data["method"] <- rep(c("PC", "STOREY", "PC_STO", "QUAD", "QUAD_STO"), each = length(mu1_grid))
+# mse_data_2["lambda"] <- lambda_grid
+# mse_data_2
+```
+
+```{r}
+# plot_mse <- ggplot(data = mse_data_2, aes(x=lambda, y=mse_lambda)) +
+#             geom_line() 
+#             # scale_colour_discrete(limits = c("STOREY", "PC", "PC_STO", "QUAD", "QUAD_STO")) +
+#             # labs(x = TeX("$\\mu_{1}$"), y = "MSE")
+# 
+# plot_mse
+```
+

@@ -1,0 +1,309 @@
+---
+title: "new draft mse"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+source("../scripts/utils.R")
+library(latex2exp)
+library(ggpubr)
+library(dplyr)
+```
+# Plot of MSE vs signal strength
+```{r}
+mu1_grid <- seq(0.1, 3, 0.1)
+lambda = 0.5
+m = 10000
+m0 = 0.6 * m 
+```
+
+```{r}
+# compute and stock the expectation and variance for each estimator function under the alternative for different mu_1
+
+exp_pc <- c()
+exp_sto <- c()
+exp_hyb <- c()
+exp_quad <- c()
+exp_quad_sto <- c()
+exp_ker <- c()
+
+var_pc <- c()
+var_sto <- c()
+var_hyb <- c()
+var_quad <- c()
+var_quad_sto <- c()
+var_ker <- c()
+
+
+for (mu1 in mu1_grid) {
+  exp_pc <- c(exp_pc, integrate(integrand_exp, 0, 1, mu1, g_pc)$value)
+  exp_sto <- c(exp_sto, integrate(integrand_exp, 0, 1, mu1, g_storey, lambda)$value)
+  exp_hyb <- c(exp_hyb, integrate(integrand_exp, 0, 1, mu1, g_sto_pc, lambda)$value)
+  exp_quad <- c(exp_quad, integrate(integrand_exp, 0, 1, mu1, g_quad)$value)
+  exp_quad_sto <- c(exp_quad_sto, integrate(integrand_exp, 0, 1, mu1, g_sto_quad, lambda)$value)
+  exp_ker <- c(exp_ker, integrate(integrand_exp, 0, 1, mu1, g_new_poly, lambda)$value)
+  
+  var_pc <- c(var_pc, integrate(integrand_var, 0, 1,  mu1, g_pc)$value)
+  var_sto <- c(var_sto, integrate(integrand_var, 0, 1,  mu1, g_storey, lambda)$value)
+  var_hyb <- c(var_hyb, integrate(integrand_var, 0, 1,  mu1, g_sto_pc, lambda)$value)
+  var_quad <- c(var_quad, integrate(integrand_var, 0, 1, mu1, g_quad)$value)
+  var_quad_sto <- c(var_quad_sto, integrate(integrand_var, 0, 1, mu1, g_sto_quad, lambda)$value)
+  var_ker <- c(var_ker, integrate(integrand_var, 0, 1, mu1, g_new_poly, lambda)$value)
+}
+```
+
+```{r}
+integrate(integrand_null_exp, 0, 1, g_new_poly, lambda)$value
+a <- integrate(integrand_null_var, 0, 1, g_new_poly, lambda)$value
+a
+```
+
+
+
+```{r}
+# expectation and variance for each estimator function under the null (assuming the pvalues are uniform under the null)
+
+nullexp_pc <- rep(1/2, length(mu1_grid))
+nullexp_sto <- rep((1-lambda), length(mu1_grid))
+nullexp_hyb <- rep((1-lambda**2)/2, length(mu1_grid))
+nullexp_quad <- rep(1/3, length(mu1_grid))
+nullexp_quad_sto <- rep((1 - lambda**3) / 3, length(mu1_grid))
+nullexp_ker <- rep((2 * (1 - lambda)) / 3 , length(mu1_grid))
+
+
+nullvar_pc <- 1/3 - nullexp_pc**2
+nullvar_sto <- (1 - lambda) - nullexp_sto**2
+nullvar_hyb <- (1-lambda**3)/3 - nullexp_hyb**2
+nullvar_quad <- 1/5 - nullexp_quad**2
+nullvar_quad_sto <- (1-lambda**5)/5 - nullexp_quad_sto**2
+exp_square <- integrate(integrand_null_var, 0, 1, g_new_poly, lambda)$value
+nullvar_ker <- exp_square - nullexp_ker**2
+```
+
+```{r}
+# MSE, bias, and variance for each estimators 
+
+mse_pc <- mse(m, m0, exp_pc, nullvar_pc, var_pc, nullexp_pc) 
+mse_sto <- mse(m, m0, exp_sto, nullvar_sto, var_sto, nullexp_sto)
+mse_hyb <- mse(m, m0, exp_hyb, nullvar_hyb, var_hyb, nullexp_hyb) 
+mse_quad <- mse(m, m0, exp_quad, nullvar_quad, var_quad, nullexp_quad) 
+mse_quad_sto <- mse(m, m0, exp_quad_sto, nullvar_quad_sto, var_quad_sto, nullexp_quad_sto)
+mse_kernel <- mse(m, m0, exp_ker, nullvar_ker, var_ker, nullexp_ker)
+
+
+bias_pc <- bias(m, m0, exp_pc, nullexp_pc) / m 
+bias_sto <- bias(m, m0, exp_sto, nullexp_sto) / m 
+bias_hyb <- bias(m, m0, exp_hyb, nullexp_hyb) / m
+bias_quad <- bias(m, m0, exp_quad, nullexp_quad) / m
+bias_quad_sto <- bias(m, m0, exp_quad_sto, nullexp_quad_sto) / m
+bias_ker <- bias(m, m0, exp_ker, nullexp_ker) / m
+
+
+estim_var_pc <- variance(m, m0, nullvar_pc, var_pc, nullexp_pc) / m**2
+estim_var_sto <- variance(m, m0, nullvar_sto, var_sto, nullexp_sto) / m**2
+estim_var_hyb <- variance(m, m0, nullvar_hyb, var_hyb, nullexp_hyb) / m**2
+estim_var_quad <- variance(m, m0, nullvar_quad, var_quad, nullexp_quad) / m**2
+estim_var_quad_sto <- variance(m, m0, nullvar_quad_sto, var_quad_sto, nullexp_quad_sto) / m**2
+estim_var_ker <- variance(m, m0, nullvar_ker, var_ker, nullexp_ker) / m**2
+```
+
+```{r}
+mse_data <- data.frame(c(bias_pc**2 + estim_var_pc, bias_sto**2 + estim_var_sto, bias_hyb**2 + estim_var_hyb, bias_quad**2 + estim_var_quad, bias_quad_sto**2 + estim_var_quad_sto, bias_ker**2 + estim_var_ker))
+names(mse_data)[1] <- "mse"
+mse_data["Estimator"] <- rep(c("PC", "STOREY", "PC_STO", "QUAD", "QUAD_STO", "KERNEL"), each = length(mu1_grid))
+mse_data["mu1"] <- rep(mu1_grid, 6)
+# mse_data
+
+```
+
+```{r}
+mse_data
+```
+
+```{r}
+mse_data <- mse_data %>% filter(Estimator != "QUAD")
+plot_mse_mu <- ggplot(data = mse_data, aes(x=mu1, y=mse, group=Estimator, linetype=Estimator)) +
+            geom_line() +
+            scale_linetype(limits = c("STOREY", "PC", "PC_STO", "QUAD_STO", "KERNEL"), labels = unname(TeX(c("$\\hat{m}_0^{Storey}$", "$\\hat{m}_0^{PC}$", "$\\hat{m}_0^{Poly}(1, 1/2)$", "$\\hat{m}_0^{Poly}(2, 1/2)$", "$\\hat{m}_0^{Kernel}$")))) +
+            labs(x = TeX("$\\mu$"), y = "MSE") + 
+            theme(legend.text.align = 0)
+
+plot_mse_mu
+```
+
+```{r}
+# plot_name = "../../../xp_plot/mse/mse_vs_mu_theory.png"
+# ggsave(filename = plot_name, plot = plot_mse, width = 16, height = 10, units = "cm")
+```
+
+# plots of bias and variance separately
+
+```{r}
+# bias_data <- data.frame(c(bias_pc**2, bias_sto**2, bias_hyb**2, bias_quad**2, bias_quad_sto**2))
+# names(bias_data)[1] <- "bias"
+# bias_data["Estimator"] <- rep(c("PC", "STOREY", "PC_STO", "QUAD", "QUAD_STO"), each = length(mu1_grid))
+# bias_data["mu1"] <- rep(mu1_grid, 5)
+# bias_data
+```
+
+```{r}
+# plot_bias <- ggplot(data = bias_data, aes(x=mu1, y=bias, group=Estimator, color=Estimator)) +
+#         geom_line()
+# 
+# plot_bias
+```
+
+```{r}
+# var_data <- data.frame(c(estim_var_pc, estim_var_sto, estim_var_hyb, estim_var_quad, estim_var_quad_sto))
+# names(var_data)[1] <- "var"
+# var_data["Estimator"] <- rep(c("PC", "STOREY", "PC_STO", "QUAD", "QUAD_STO"), each = length(mu1_grid))
+# var_data["mu1"] <- rep(mu1_grid, 5)
+# var_data
+```
+
+```{r}
+# plot_var <- ggplot(data = var_data, aes(x=mu1, y=var, group=Estimator, color=Estimator)) +
+#         geom_line()
+# 
+# plot_var
+```
+
+# Plot of MSE vs pi0
+
+```{r}
+mu1 = 1
+pi0_grid <- seq(0.1, 0.9, 0.1)
+lambda = 0.5
+m = 1000
+m0_grid = pi0_grid * m
+```
+
+```{r}
+exp_pc <- integrate(integrand_exp, 0, 1, mu1, g_pc)$value
+exp_sto <- integrate(integrand_exp, 0, 1, mu1, g_storey, lambda)$value
+exp_hyb <- integrate(integrand_exp, 0, 1, mu1, g_sto_pc, lambda)$value
+exp_quad <- integrate(integrand_exp, 0, 1, mu1, g_quad)$value
+exp_quad_sto <- integrate(integrand_exp, 0, 1, mu1, g_sto_quad, lambda)$value
+exp_ker <- integrate(integrand_exp, 0, 1, mu1, g_new_poly, lambda)$value
+  
+var_pc <- integrate(integrand_var, 0, 1,  mu1, g_pc)$value
+var_sto <- integrate(integrand_var, 0, 1,  mu1, g_storey, lambda)$value
+var_hyb <- integrate(integrand_var, 0, 1,  mu1, g_sto_pc, lambda)$value
+var_quad <- integrate(integrand_var, 0, 1, mu1, g_quad)$value
+var_quad_sto <- integrate(integrand_var, 0, 1, mu1, g_sto_quad, lambda)$value
+var_ker <- integrate(integrand_var, 0, 1, mu1, g_new_poly, lambda)$value
+```
+
+```{r}
+# expectation and variance for each estimator function under the null (assuming the pvalues are uniform under the null)
+
+nullexp_pc <- 1/2
+nullexp_sto <- (1-lambda)
+nullexp_hyb <- (1-lambda**2)/2
+nullexp_quad <- 1/3
+nullexp_quad_sto <- (1 - lambda**3) / 3
+nullexp_ker <- (2 * (1 - lambda)) / 3 
+
+
+nullvar_pc <- 1/3 - nullexp_pc**2
+nullvar_sto <- (1 - lambda) - nullexp_sto**2
+nullvar_hyb <- (1-lambda**3)/3 - nullexp_hyb**2
+nullvar_quad <- 1/5 - nullexp_quad**2
+nullvar_quad_sto <- (1-lambda**5)/5 - nullexp_quad_sto**2
+exp_square <- integrate(integrand_null_var, 0, 1, g_new_poly, lambda)$value
+nullvar_ker <- exp_square - nullexp_ker**2
+```
+
+```{r}
+# MSE, bias, and variance for each estimators 
+
+mse_pc <- c()
+mse_sto <- c()
+mse_hyb <- c()
+mse_quad <- c()
+mse_quad_sto <- c()
+mse_ker <- c()
+
+bias_pc <- c()
+bias_sto <- c()
+bias_hyb <- c()
+bias_quad <- c()
+bias_quad_sto <- c()
+bias_ker <- c()
+
+estim_var_pc <- c()
+estim_var_sto <- c()
+estim_var_hyb <- c()
+estim_var_quad <- c()
+estim_var_quad_sto <- c()
+estim_var_ker <- c()
+
+
+for (m0 in m0_grid) {
+  
+  mse_pc <- c(mse_pc, mse(m, m0, exp_pc, nullvar_pc, var_pc, nullexp_pc))
+  mse_sto <- c(mse_sto, mse(m, m0, exp_sto, nullvar_sto, var_sto, nullexp_sto))
+  mse_hyb <- c(mse_hyb, mse(m, m0, exp_hyb, nullvar_hyb, var_hyb, nullexp_hyb)) 
+  mse_quad <- c(mse_quad, mse(m, m0, exp_quad, nullvar_quad, var_quad, nullexp_quad))
+  mse_quad_sto <- c(mse_quad_sto, mse(m, m0, exp_quad_sto, nullvar_quad_sto, var_quad_sto, nullexp_quad_sto))
+  mse_ker <- c(mse_ker, mse(m, m0, exp_ker, nullvar_ker, var_ker, nullexp_ker))
+
+
+  bias_pc <- c(bias_pc, bias(m, m0, exp_pc, nullexp_pc) / m)
+  bias_sto <- c(bias_sto, bias(m, m0, exp_sto, nullexp_sto) / m)
+  bias_hyb <- c(bias_hyb, bias(m, m0, exp_hyb, nullexp_hyb) / m)
+  bias_quad <- c(bias_quad, bias(m, m0, exp_quad, nullexp_quad) / m)
+  bias_quad_sto <- c(bias_quad_sto, bias(m, m0, exp_quad_sto, nullexp_quad_sto) / m)
+  bias_ker <- c(bias_ker, bias(m, m0, exp_ker, nullexp_ker) / m)
+
+  estim_var_pc <- c(estim_var_pc, variance(m, m0, nullvar_pc, var_pc, nullexp_pc) / m**2)
+  estim_var_sto <- c(estim_var_sto, variance(m, m0, nullvar_sto, var_sto, nullexp_sto) / m**2)
+  estim_var_hyb <- c(estim_var_hyb, variance(m, m0, nullvar_hyb, var_hyb, nullexp_hyb) / m**2)
+  estim_var_quad <- c(estim_var_quad, variance(m, m0, nullvar_quad, var_quad, nullexp_quad) / m**2)
+  estim_var_quad_sto <- c(estim_var_quad_sto, variance(m, m0, nullvar_quad_sto, var_quad_sto, nullexp_quad_sto) / m**2)
+  estim_var_ker <- c(estim_var_ker, variance(m, m0, nullvar_ker, var_ker, nullexp_ker) / m**2)
+}
+
+
+
+```
+
+```{r}
+mse_data_2 <- data.frame(c(bias_pc**2 + estim_var_pc, bias_sto**2 + estim_var_sto, bias_hyb**2 + estim_var_hyb, bias_quad**2 + estim_var_quad, bias_quad_sto**2 + estim_var_quad_sto, bias_ker**2 + estim_var_ker))
+names(mse_data_2)[1] <- "mse"
+mse_data_2["Estimator"] <- rep(c("PC", "STOREY", "PC_STO", "QUAD", "QUAD_STO", "KERNEL"), each = length(m0_grid))
+mse_data_2["pi0"] <- rep(pi0_grid, 6)
+mse_data_2
+
+```
+
+```{r}
+mse_data_2 <- mse_data_2 %>% filter(Estimator != "QUAD")
+plot_mse_pi0 <- ggplot(data = mse_data_2, aes(x=pi0, y=mse, group=Estimator, linetype=Estimator)) +
+            geom_line() +
+            scale_linetype(limits = c("STOREY", "PC", "PC_STO", "QUAD_STO", "KERNEL"), labels = unname(TeX(c("$\\hat{m}_0^{Storey}$", "$\\hat{m}_0^{PC}$", "$\\hat{m}_0^{Poly}(1, 1/2)$", "$\\hat{m}_0^{Poly}(2, 1/2)$","$\\hat{m}_0^{Kernel}$")))) +
+            labs(x = TeX("$\\pi_{0}$"), y = "MSE") + 
+            theme(legend.text.align = 0)
+
+plot_mse_pi0
+```
+
+```{r}
+# plot_name = "../../../xp_plot/mse/mse_vs_pi0_theory.png"
+# ggsave(filename = plot_name, plot = plot_mse, width = 16, height = 10, units = "cm")
+```
+
+
+```{r}
+figure <- ggarrange(plot_mse_mu, plot_mse_pi0,
+                    ncol = 2, nrow = 1, 
+                    common.legend = TRUE)
+figure
+```
+
+```{r}
+plot_name = "../../xp_plot/mse/msegaussiannew.png"
+ggsave(plot_name, plot = figure, width = 12, height = 8)
+```
+

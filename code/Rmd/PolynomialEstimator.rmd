@@ -1,0 +1,137 @@
+---
+title: "PolynomialEstimators"
+author: "us"
+date: '2023-03-17'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Libraries
+
+```{r}
+library(qvalue)
+```
+
+
+#   Truncated polynomial  for $\pi_0$
+
+```{r}
+g.polynomial<-function(x,r,lambda){
+  return(as.numeric((x^r*(x>lambda))))
+}
+nu.polynomial<-function(r,lambda){
+  return((1-lambda^(r+1))/(r+1))
+}
+```
+
+Estimator
+
+```{r}
+polynomial.est<-function(x,r,lambda){
+  y<-g.polynomial(x,r=r,lambda=lambda)
+  return((1+sum(y))/nu.polynomial(r=r,lambda=lambda))
+  }
+```
+
+#   Hedenfalk data
+
+
+##    Get data 
+
+```{r}
+data(hedenfalk)
+stat <- hedenfalk$stat
+stat0 <- hedenfalk$stat0 #vector from null distribution
+
+p.pooled <- empPvals(stat=stat, stat0=stat0)
+p.testspecific <- empPvals(stat=stat, stat0=stat0, pool=FALSE)
+
+#compare pooled to test-specific p-values
+qqplot(p.pooled, p.testspecific); abline(0,1)
+
+# calculate q-values and view results
+qobj <- qvalue(p.pooled)
+summary(qobj)
+hist(qobj)
+plot(qobj)
+
+```
+
+##    Estimation path
+
+```{r}
+data<-p.pooled
+lambda<-seq(0,1,0.001)
+m<-length(data)
+#y.values.Storey<-sapply(lambda,FUN=function(l){polynomial.est(x=data,r=0,l)})
+y.values.Storey<-sapply(lambda,FUN=polynomial.est,x=data,r=0)/m
+plot(lambda,y.values.Storey,type="l")
+y.new<-sapply(lambda,FUN=polynomial.est,x=data,r=1)/m
+lines(lambda,y.new,col="blue")
+plot(y.new/y.values.Storey,type="l")
+abline(h=1,col="grey",lwd=2,lty=2)
+```
+
+Smoothing effect?
+
+
+#    Analytical calculations in gaussian one-sided testing
+
+Parameters
+
+```{r}
+pi0<-0.8
+m<-500
+m0<-pi0*m
+```
+
+
+```{r}
+mu1<-1
+```
+
+Alternative density
+```{r}
+alt.density<-function(t,mu1=mu1){
+  return(exp(-mu1*qnorm(t)-.5*mu1^2))
+}
+```
+
+
+
+Bias
+
+```{r}
+Bias.polynomial<-function(r,lambda,mu1=mu1,pi0=0){
+  alt.moment<-integrate(function(t){t^r*alt.density(t,mu1=mu1)},lower=lambda,upper=1)$value
+  return((1-pi0)*(r+1)*alt.moment/(1-lambda^(r+1)))
+}
+
+```
+
+Bias as a function of lambda
+
+```{r}
+lambda<-seq(0,1,0.001)
+Bias.Storey<-sapply(lambda,FUN=Bias.polynomial,r=0,mu1=mu1,pi0=0)
+plot(lambda,Bias.Storey,type="l")
+Bias.new<-sapply(lambda,FUN=Bias.polynomial,r=2,m
+                 u1=mu1,pi0=0)
+lines(lambda,Bias.new,col="blue")
+plot(lambda,Bias.new/Bias.Storey,type="l",ylim=c(0,1))
+abline(h=1,col="grey",lwd=2,lty=2)
+```
+
+
+Bias as a function of $r$ for lambda=.5
+
+```{r}
+r<-seq(0,700,0.1)
+r<-seq(0,5,0.01)
+Bias.new<-sapply(r,FUN=Bias.polynomial,lambda=.5,mu1=mu1,pi0=0)
+Bias.new.rel<-Bias.new/Bias.new[1]
+plot(r,Bias.new.rel,type="l")
+```

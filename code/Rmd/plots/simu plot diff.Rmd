@@ -1,0 +1,157 @@
+---
+title: "simu plot diff"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(latex2exp)
+library(RColorBrewer)
+```
+
+```{r}
+nb_run = 1000
+m = 500
+nb_methods = 3
+m0_seq <- seq(0.1, 0.9, 0.1) * m
+mu1_seq <- c(0, 0.5, 1, 1.5, 2, 2.5, 3)
+```
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Estimator boxplot 
+```{r}
+file_names_1 <- c(
+"../../../xp_data/gaussian/estimators/PCdiff_data_estimates_mu1_0_2023-06-02_09:13:45.csv",
+"../../../xp_data/gaussian/estimators/PCdiff_data_estimates_mu1_0.5_2023-06-02_09:13:51.csv",
+"../../../xp_data/gaussian/estimators/PCdiff_data_estimates_mu1_1_2023-06-02_09:14:00.csv",
+"../../../xp_data/gaussian/estimators/PCdiff_data_estimates_mu1_1.5_2023-06-02_09:14:10.csv",
+"../../../xp_data/gaussian/estimators/PCdiff_data_estimates_mu1_2_2023-06-02_09:14:20.csv",
+"../../../xp_data/gaussian/estimators/PCdiff_data_estimates_mu1_2.5_2023-06-02_09:14:30.csv",
+"../../../xp_data/gaussian/estimators/PCdiff_data_estimates_mu1_3_2023-06-02_09:14:41.csv"
+)
+```
+
+```{r}
+m0 = rep(m0_seq, each = nb_run * nb_methods)
+test <- read.csv(file_names_1[1])
+methods <- rep(test$method, length(m0_seq))
+```
+
+```{r}
+for (i in 1:length(file_names_1)) {
+  
+  mu_1 <- mu1_seq[i]
+  df <- read.csv(file_names_1[i])
+  estimators <- c(df$V2, df$V3, df$V4, df$V5, df$V6, df$V7, df$V8, df$V9, df$V10)
+  new_df <- data.frame(methods, estimators, m0)
+  new_df$m0 <- as.character(new_df$m0)
+  new_df <- new_df %>% filter(methods == "SAMPLE DIFF")
+
+  plot_ <- ggplot(new_df, aes(x=m0, y=estimators)) +
+           geom_boxplot(color = "grey37") +
+           scale_x_discrete(limits = c("50","100", "150", "200", "250","300","350","400","450")) +
+           labs(x = TeX("$m_{0}$"), y = TeX("$\\hat{m}_{0}^{PC,new} - \\hat{m}_{0}^{PC,ZZD}$")) +
+           theme(legend.position = "none")
+  
+  plot_name = gsub(" " , "", paste("../../../xp_plot/simu/estimations/gaussian/", gsub(" ", "_", paste("PCdiff_mu_1", as.character(mu_1), sep="_")), ".png"))
+  ggsave(filename = plot_name, plot = plot_, width = 16, height = 10, units = "cm")
+  
+}
+```
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------Rejection nb boxplot
+```{r}
+file_names_2 <- c(
+"../../../xp_data/gaussian/rejections/PCdiff_data_rejections_mu1_0_2023-06-02_09:13:45.csv",
+"../../../xp_data/gaussian/rejections/PCdiff_data_rejections_mu1_0.5_2023-06-02_09:13:51.csv",
+"../../../xp_data/gaussian/rejections/PCdiff_data_rejections_mu1_1_2023-06-02_09:14:01.csv",
+"../../../xp_data/gaussian/rejections/PCdiff_data_rejections_mu1_1.5_2023-06-02_09:14:10.csv",
+"../../../xp_data/gaussian/rejections/PCdiff_data_rejections_mu1_2_2023-06-02_09:14:20.csv",
+"../../../xp_data/gaussian/rejections/PCdiff_data_rejections_mu1_2.5_2023-06-02_09:14:30.csv",
+"../../../xp_data/gaussian/rejections/PCdiff_data_rejections_mu1_3_2023-06-02_09:14:41.csv"
+)
+```
+
+```{r}
+m0 = rep(m0_seq, each = nb_run )
+test <- read.csv(file_names_2[1])
+methods <- rep(test$method, length(m0_seq))
+```
+
+```{r}
+for (i in 1:length(file_names_2)) {
+  
+  mu_1 <- mu1_seq[i]
+  df <- read.csv(file_names_2[i])
+  rejections <- c(df$V2, df$V3, df$V4, df$V5, df$V6, df$V7, df$V8, df$V9, df$V10)
+  new_df <- data.frame(methods, rejections, m0)
+  pc_rej <- new_df %>%  filter(methods == "PC")
+  pc_zzd_rej <- new_df %>%  filter(methods == "PC_ZZD")
+  
+  new_df_final <- data.frame(pc_rej$rejections - pc_zzd_rej$rejections, m0)
+  new_df_final$m0 <- as.character(new_df_final$m0)
+  names(new_df_final)[1] = "rej_diff"
+  # new_df <- new_df %>% filter(methods == "SAMPLE DIFF")
+
+  plot_ <- ggplot(new_df_final, aes(x=m0, y=rej_diff)) +
+           geom_boxplot(color = "grey37") +
+           scale_x_discrete(limits = c("50","100", "150", "200", "250","300","350","400","450")) +
+           labs(x = TeX("$m_{0}$"), y = TeX("$\\hat{k}^{PC, new} - \\hat{k}^{PC, ZZD}$")) 
+           theme(legend.position = "none")
+  
+  plot_name = gsub(" " , "", paste("../../../xp_plot/simu/rejections/", gsub(" ", "_", paste("PCdiff_rejections_mu_1", as.character(mu_1), sep="_")), ".png"))
+  ggsave(filename = plot_name, plot = plot_, width = 16, height = 10, units = "cm")
+  
+}
+```
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------Power boxplot
+```{r}
+file_names_3 <- c(
+"../../../xp_data/gaussian/power/PCdiff_data_power_mu1_0_2023-06-02_09:13:45.csv",
+"../../../xp_data/gaussian/power/PCdiff_data_power_mu1_0.5_2023-06-02_09:13:51.csv",
+"../../../xp_data/gaussian/power/PCdiff_data_power_mu1_1_2023-06-02_09:14:01.csv",
+"../../../xp_data/gaussian/power/PCdiff_data_power_mu1_1.5_2023-06-02_09:14:10.csv",
+"../../../xp_data/gaussian/power/PCdiff_data_power_mu1_2_2023-06-02_09:14:20.csv",
+"../../../xp_data/gaussian/power/PCdiff_data_power_mu1_2.5_2023-06-02_09:14:30.csv",
+"../../../xp_data/gaussian/power/PCdiff_data_power_mu1_3_2023-06-02_09:14:41.csv"
+)
+```
+
+```{r}
+m0 = rep(m0_seq, each = nb_run * (nb_methods + 1))
+test <- read.csv(file_names_3[1])
+methods <- rep(test$method, length(m0_seq))
+```
+
+```{r}
+for (i in 1:length(file_names_3)) {
+  
+  mu_1 <- mu1_seq[i]
+  df <- read.csv(file_names_3[i])
+  rejections <- c(df$V2, df$V3, df$V4, df$V5, df$V6, df$V7, df$V8, df$V9, df$V10)
+  new_df <- data.frame(methods, rejections, m0)
+  new_df$m0 <- as.character(new_df$m0)
+  # new_df <- new_df %>% filter(methods == "SAMPLE DIFF")
+
+  plot_ <- ggplot(new_df, aes(x=m0, y=rejections, color=methods)) +
+           geom_boxplot() +
+           scale_x_discrete(limits = c("50","100", "150", "200", "250","300","350","400","450")) +
+           labs(x = TeX("$m_{0}$"), y = TeX("$\\hat{k}$")) 
+           # theme(legend.position = "none")
+  
+  plot_name = gsub(" " , "", paste("../../../xp_plot/simu/power/", gsub(" ", "_", paste("PCdiff_power_mu_1", as.character(mu_1), sep="_")), ".png"))
+  ggsave(filename = plot_name, plot = plot_, width = 16, height = 10, units = "cm")
+  
+}
+```
+
+
+

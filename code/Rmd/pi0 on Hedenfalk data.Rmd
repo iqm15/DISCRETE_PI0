@@ -1,0 +1,66 @@
+---
+title: "pi0 on Hedenfalk data"
+output: html_document
+---
+
+```{r}
+library(qvalue)
+source("../scripts/estimators.R")
+```
+
+##    Get data 
+
+```{r}
+data(hedenfalk)
+stat <- hedenfalk$stat
+stat0 <- hedenfalk$stat0 # vector from null distribution
+
+p.pooled <- empPvals(stat=stat, stat0=stat0)
+p.testspecific <- empPvals(stat=stat, stat0=stat0, pool=FALSE)
+
+#compare pooled to test-specific p-values
+qqplot(p.pooled, p.testspecific); abline(0,1)
+
+# calculate q-values and view results
+qobj <- qvalue(p.pooled)
+summary(qobj)
+hist(qobj)
+plot(qobj)
+
+```
+
+```{r}
+pvalues <- p.pooled
+m <- length(pvalues)
+
+hist(pvalues)
+```
+
+```{r}
+lambda <- 0.5
+
+# these values are for PC_ZZD, reported in the appendix of the paper 
+# "FDR Control with adaptive procedures and FDR monotonicity"
+# I took the values for m = 3000
+C = 1.004426
+s = 272
+```
+
+```{r}
+storey_estim <- Storey(pvalues, lambda) / m
+pc_estim <- PC_new_DM(pvalues) / m
+pc_zzd_estim <- PC_ZZD(pvalues, C, s) / m
+
+storey_pc_estim <- PC_Storey(pvalues, lambda) / m
+storey_quad_estim <- Quad_Storey(pvalues, lambda) / m
+
+quad_estim <- quad_PC(pvalues) / m
+
+```
+
+```{r}
+data= matrix(c(storey_estim, pc_estim, pc_zzd_estim, storey_pc_estim, storey_quad_estim, quad_estim), ncol=6, byrow=TRUE)
+colnames(data) = c('Storey','PC','PC (ZZD)','Storey-PC', "Storey-Quad", "Quad")
+as.table(data)
+```
+

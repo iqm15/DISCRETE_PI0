@@ -1,0 +1,89 @@
+```{r}
+library(ggplot2)
+library(latex2exp)
+library(ggbrace)
+```
+
+```{r}
+
+data <- data.frame(c(0, 1), c(0, 1))
+names(data)[1] =  "x_diag"
+names(data)[2] =  "y_diag"
+
+# segments for p-value
+data_seg_1 <- data.frame(x1 = -0.1, x2 = 0.3, y1 = 0, y2 = 0)
+data_seg_2 <- data.frame(x1 = 0.3, x2 = 0.55, y1 = 0.3, y2 = 0.3)
+data_seg_3 <- data.frame(x1 = 0.55, x2 = 0.7, y1 = 0.55, y2 = 0.55)
+data_seg_4 <- data.frame(x1 = 0.7, x2 = 0.9, y1 = 0.7, y2 = 0.7)
+data_seg_5 <- data.frame(x1 = 0.9, x2 = 1, y1 = 0.9, y2 = 0.9)
+data_seg_6 <- data.frame(x1 = 1, x2 = 1.05, y1 = 1, y2 = 1)
+```
+
+```{r}
+# segments for mid-pvalue
+data_seg_midp_1 <- data.frame(x1 = -0.1, x2 = 0.15, y1 = 0, y2 = 0)
+data_seg_midp_2 <- data.frame(x1 = 0.15, x2 = 0.425, y1 = 0.3, y2 = 0.3)
+data_seg_midp_3 <- data.frame(x1 = 0.425, x2 = 0.625, y1 = 0.55, y2 = 0.55)
+data_seg_midp_4 <- data.frame(x1 = 0.625, x2 = 0.8, y1 = 0.7, y2 = 0.7)
+data_seg_midp_5 <- data.frame(x1 = 0.8, x2 = 0.95, y1 = 0.9, y2 = 0.9)
+data_seg_midp_6 <- data.frame(x1 = 0.95, x2 = 1.05, y1 = 1, y2 = 1)
+```
+
+```{r}
+data_rug_1 <- data.frame(c(0.3, 0.55, 0.7, 0.9, 1))
+names(data_rug_1)[1] <- "pval"
+
+data_rug_2 <- data.frame(c(0.15, 0.425, 0.625, 0.8, 0.95))
+names(data_rug_2)[1] <- "midpval"
+```
+
+
+
+```{r}
+plot_ <- ggplot(data) + geom_line(aes_string(x = "x_diag", y = "y_diag"), 
+                         color = "azure4", lwd = 0.5) +
+               xlab("") + ylab("") +
+# stepwise function for pvalue
+               geom_segment(data = data_seg_1, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darksalmon") + 
+               # annotate(geom = "point", x = 0, y = 0, color = "darksalmon", size = 3) +
+               geom_segment(data = data_seg_2, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darksalmon") +
+               annotate(geom = "point", x = 0.3, y = 0.3, color = "darksalmon", size = 3) +
+               geom_segment(data = data_seg_3, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darksalmon") + 
+               annotate(geom = "point", x = 0.55, y = 0.55, color = "darksalmon", size = 3) +
+               geom_segment(data = data_seg_4, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darksalmon") + 
+               annotate(geom = "point", x = 0.7, y = 0.7, color = "darksalmon", size = 3) +
+               geom_segment(data = data_seg_5, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darksalmon") + 
+               annotate(geom = "point", x = 0.9, y = 0.9, color = "darksalmon", size = 3) +
+               geom_segment(data = data_seg_6, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darksalmon") +
+               annotate(geom = "point", x = 1, y = 1, color = "darksalmon", size = 3) +
+            
+  
+
+# stepwise function for midp value
+               geom_segment(data = data_seg_midp_1, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darkolivegreen4") +
+               # annotate(geom = "point", x = 0, y = 0, color = "darksalmon", size = 3) +
+               geom_segment(data = data_seg_midp_2, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darkolivegreen4") +
+               annotate(geom = "point", x = 0.15, y = 0.3, color = "darkolivegreen4", size = 3) +
+               geom_segment(data = data_seg_midp_3, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darkolivegreen4") +
+               annotate(geom = "point", x = 0.425, y = 0.55, color = "darkolivegreen4", size = 3) +
+               geom_segment(data = data_seg_midp_4, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darkolivegreen4") +
+               annotate(geom = "point", x = 0.625, y = 0.7, color = "darkolivegreen4", size = 3) +
+               geom_segment(data = data_seg_midp_5, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darkolivegreen4") +
+               annotate(geom = "point", x = 0.8, y = 0.9, color = "darkolivegreen4", size = 3) +
+               geom_segment(data = data_seg_midp_6, aes(x = x1, y = y1, xend = x2, yend = y2), lwd = 1, color = "darkolivegreen4") +
+               annotate(geom = "point", x = 0.95, y = 1, color = "darkolivegreen4", size = 3) + 
+               # 
+               # annotate(geom = "point", x = 0.95, y = 1, color = "darksalmon", size = 3) 
+    
+              geom_rug(data = data_rug_1, mapping = aes(x = pval), color = "darksalmon", size = 1.2) +
+              geom_rug(data = data_rug_2, mapping = aes(x = midpval), color = "darkolivegreen4", size = 1.2) +
+        
+              xlim(-0.1, 1.05)
+              
+plot_
+  
+``` 
+
+```{r}
+ggsave("../../../xp_plot/mipvspvalue.png", plot = plot_, width = 16, height = 10, units = "cm")
+```

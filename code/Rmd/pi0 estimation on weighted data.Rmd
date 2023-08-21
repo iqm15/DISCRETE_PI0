@@ -1,0 +1,105 @@
+---
+title: "pi0 estimation on weighted data"
+output: html_document
+---
+
+
+```{r}
+library(ggplot2)
+source("../scripts/estimators.R")
+```
+
+
+```{r}
+#------------------------------------
+#     Load IHW Data
+#------------------------------------
+
+load("../../../../../Nextcloud/Iqraa/WeightedSURE/weighteddataIHW.rdata")
+ls() #returns a list of all the objects you just loaded (and anything else in your environment)
+```
+
+```{r}
+# write.csv(ihwResDf.0, file="ihwResDf.csv")
+```
+
+```{r}
+#-------------------------------------------
+#       data preprocessing and visualization
+#-------------------------------------------
+      # take subset
+selection <- 1:5000
+  # nrow(ihwResDf.0)
+ihwResDf <- ihwResDf.0[selection,]
+```
+
+```{r}
+na_indices <- which(is.na(ihwResDf$pvalue))
+raw_pvalues <- ihwResDf$pvalue[-na_indices]
+raw_weights <- ihwResDf$weight[-na_indices]
+# scaled_weights <- compute_scaled_weights(raw_weights)
+```
+
+```{r}
+df.1 <- as.data.frame(cbind(c("Sample size (whole data set)", "missings", "no. of tests analyzed (m)", "number of zero-weights"), c(nrow(ihwResDf), length(na_indices), length(raw_pvalues), length(which(raw_weights==0)))))
+df.1
+```
+
+```{r}
+data_weights <- data.frame(raw_weights)
+data_pvalues <- data.frame(raw_pvalues)
+```
+
+```{r}
+mean(data_weights$raw_weights)
+```
+
+# visualization of weights 
+```{r}
+ggplot(data_weights, aes(x=raw_weights)) +
+       geom_histogram()
+```
+
+```{r}
+ggplot(data_pvalues, aes(raw_pvalues)) +
+      stat_ecdf(geom="step")
+```
+
+```{r}
+rescaled_weights <- raw_weights / mean(raw_weights)
+
+hist(raw_weights / mean(raw_weights))
+
+max(raw_weights / mean(raw_weights))
+```
+
+```{r}
+weighted_pvalues <- raw_pvalues / rescaled_weights
+
+hist(weighted_pvalues)
+```
+
+```{r}
+Storey(weighted_pvalues, 0.5) / length(weighted_pvalues)
+Storey(raw_pvalues, 0.5) / length(raw_pvalues)
+```
+
+
+
+
+
+```{r}
+weighted_pvalues_2 <- raw_pvalues[-which(rescaled_weights == 0)] / raw_weights[-which(rescaled_weights == 0)]
+
+hist(weighted_pvalues_2)
+```
+
+```{r}
+Storey(weighted_pvalues_2, 0.5) / length(weighted_pvalues_2)
+Storey(raw_pvalues[-which(raw_weights == 0)], 0.5) / length(raw_pvalues[-which(raw_weights == 0)])
+# Storey(raw_pvalues, 0.5) / length(raw_pvalues)
+```
+
+```{r}
+Storey(raw_pvalues[-which(raw_weights == 0)], 0.5*raw_weights[-which(raw_weights == 0)]) / length(raw_pvalues[-which(raw_weights == 0)])
+```

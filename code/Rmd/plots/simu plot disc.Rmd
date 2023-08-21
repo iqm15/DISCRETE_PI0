@@ -1,0 +1,156 @@
+---
+title: "simu plot disc"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(latex2exp)
+library(RColorBrewer)
+```
+
+```{r}
+nb_run = 1000
+nb_methods = 12
+pi0_seq <- seq(0.1, 0.9, 0.1)
+p3_seq <- seq(0.2, 0.5, 0.05)
+```
+
+```{r}
+file_names_1 <- c(
+"../../../xp_data/FET/estimators/data_estimates_signal_strength_0.2_2023-05-18_13:10:57.csv",
+"../../../xp_data/FET/estimators/data_estimates_signal_strength_0.25_2023-05-18_17:34:35.csv",
+"../../../xp_data/FET/estimators/data_estimates_signal_strength_0.3_2023-05-18_22:35:23.csv",
+"../../../xp_data/FET/estimators/data_estimates_signal_strength_0.35_2023-05-19_03:36:47.csv",
+"../../../xp_data/FET/estimators/data_estimates_signal_strength_0.4_2023-05-19_07:58:58.csv",
+"../../../xp_data/FET/estimators/data_estimates_signal_strength_0.45_2023-05-19_14:39:05.csv",
+"../../../xp_data/FET/estimators/data_estimates_signal_strength_0.5_2023-05-19_21:08:30.csv"
+)
+```
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------
+```{r}
+pi0 = rep(pi0_seq, each = nb_run * nb_methods)
+test <- read.csv(file_names_1[1])
+Estimator <- rep(test$method, length(pi0_seq))
+```
+
+```{r}
+
+```
+
+
+```{r}
+for (i in 1:length(file_names_1)) {
+  
+  p3 <- p3_seq[i]
+  df <- read.csv(file_names_1[i])
+  estimators <- c(df$V10, df$V9, df$V8, df$V7, df$V6, df$V5, df$V4, df$V3, df$V2)
+  new_df <- data.frame(Estimator, estimators, pi0)
+  new_df$pi0 <- as.character(new_df$pi0)
+  cont_disc_df <- new_df %>% filter(Estimator == c("STOREY", "PC", "POLY", "RESC_STOREY", "RESC_PC", "RESC_POLY"))
+  cont_disc_df$Estimator <- factor(cont_disc_df$Estimator , levels = c("STOREY", "PC", "POLY", "RESC_STOREY", "RESC_PC", "RESC_POLY"))
+  # names(cont_disc_df)[3] = "Estimator"
+
+   plot_ <- ggplot(cont_disc_df, aes(x=pi0, y=estimators, color=Estimator)) +
+          
+          geom_boxplot() +
+          geom_segment(aes(x = as.character(0.05), y = 0.1, xend = as.character(0.15), yend = 0.1)) +
+          geom_segment(aes(x = as.character(0.15), y = 0.2, xend = as.character(0.25), yend = 0.2)) +
+          geom_segment(aes(x = as.character(0.25), y = 0.3, xend = as.character(0.35), yend = 0.3)) +
+          geom_segment(aes(x = as.character(0.35), y = 0.4, xend = as.character(0.45), yend = 0.4)) +
+          geom_segment(aes(x = as.character(0.45), y = 0.5, xend = as.character(0.55), yend = 0.5)) +
+          geom_segment(aes(x = as.character(0.55), y = 0.6, xend = as.character(0.65), yend = 0.6)) +
+          geom_segment(aes(x = as.character(0.65), y = 0.7, xend = as.character(0.75), yend = 0.7)) +
+          geom_segment(aes(x = as.character(0.75), y = 0.8, xend = as.character(0.85), yend = 0.8)) +
+          geom_segment(aes(x = as.character(0.85), y = 0.9, xend = as.character(0.95), yend = 0.9)) +
+          scale_x_discrete(breaks=c("0.1","0.2","0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"),
+                           labels=c("0.1","0.2","0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) + 
+          scale_colour_discrete(limits = c("STOREY", "PC", "POLY",
+                                           "RESC_STOREY", "RESC_PC", "RESC_POLY"), 
+                                labels = unname(TeX(c("$\\hat{m}_0^{Storey}$", "$\\hat{m}_0^{PC}$", "$\\hat{m}_0^{Poly}(2, 1/2)$", 
+                                                      "$\\hat{m}_0^{du-Storey}$", "$\\hat{m}_0^{du-PC}$", "$\\hat{m}_0^{du-Poly}(2, 1/2)$")))) +
+          # theme(axis.text.x=element_blank(), axis.ticks.x=element_blank()) +
+          labs(x = TeX("$\\pi_{0}$"), y = TeX("$\\hat{\\pi}_{0}$")) +
+          theme(legend.text.align = 0)
+  
+  plot_name = gsub(" " , "", paste("../../../xp_plot/simu/estimations/FET/", gsub(" ", "_", paste("estimation_base_vs_resc_p3", as.character(p3), sep="_")), ".png"))
+  ggsave(filename = plot_name, plot = plot_, width = 16, height = 10, units = "cm")
+  
+}
+```
+
+
+
+
+```{r}
+plot_
+```
+
+
+-------------------------------------------------------------------------------------------------------------------------------
+```{r}
+test <- read.csv(file_names_1[1])
+pi0 = rep(c(0.2, 0.5, 0.7), each = nb_run * nb_methods)
+pi0_seq <- c(0.2, 0.5, 0.7)
+Estimator <- rep(test$method, length(pi0_seq))
+```
+
+```{r}
+
+for (i in 1:length(file_names_1)) {
+  
+  p3 <- p3_seq[i]
+  df <- read.csv(file_names_1[i])
+  estimators <- c(df$V9, df$V6, df$V4)
+  new_df <- data.frame(Estimator, estimators, pi0)
+  new_df$pi0 <- as.character(new_df$pi0)
+  
+  disc_df <- new_df %>% filter(Estimator == c("RESC_STOREY", "RESC_PC", "RESC_POLY",
+                                                 "RESC_STOREY_midp", "RESC_PC_midp", "RESC_POLY_midp",
+                                                 "STOREY_RANDOM", "PC_RANDOM",  "POLY_RANDOM"))
+  disc_df$Estimator <- factor(disc_df$Estimator , levels = c("RESC_STOREY", "RESC_PC", "RESC_POLY",
+                                                 "RESC_STOREY_midp", "RESC_PC_midp", "RESC_POLY_midp",
+                                                 "STOREY_RANDOM", "PC_RANDOM",  "POLY_RANDOM"))
+
+   
+  plot_ <- ggplot(disc_df, aes(x=pi0, y=estimators, color=Estimator)) +
+          
+          geom_boxplot() +
+          # geom_segment(aes(x = as.character(0.05), y = 0.1, xend = as.character(0.15), yend = 0.1)) +
+          geom_segment(aes(x = as.character(0.15), y = 0.2, xend = as.character(0.25), yend = 0.2)) +
+          # geom_segment(aes(x = as.character(0.25), y = 0.3, xend = as.character(0.35), yend = 0.3)) +
+          # geom_segment(aes(x = as.character(0.35), y = 0.4, xend = as.character(0.45), yend = 0.4)) +
+          geom_segment(aes(x = as.character(0.45), y = 0.5, xend = as.character(0.55), yend = 0.5)) +
+          # geom_segment(aes(x = as.character(0.55), y = 0.6, xend = as.character(0.65), yend = 0.6)) +
+          geom_segment(aes(x = as.character(0.65), y = 0.7, xend = as.character(0.75), yend = 0.7)) +
+          # geom_segment(aes(x = as.character(0.75), y = 0.8, xend = as.character(0.85), yend = 0.8)) +
+          # geom_segment(aes(x = as.character(0.85), y = 0.9, xend = as.character(0.95), yend = 0.9)) +
+          scale_x_discrete(breaks=c("0.2", "0.5", "0.7"),
+                           labels=c("0.2", "0.5", "0.7")) +
+          scale_colour_discrete(limits = c("RESC_STOREY", "RESC_PC", "RESC_POLY",
+                                                 "RESC_STOREY_midp", "RESC_PC_midp", "RESC_POLY_midp",
+                                                 "STOREY_RANDOM", "PC_RANDOM",  "POLY_RANDOM"),
+                                labels = unname(TeX(c("$\\hat{m}_0^{du-Storey}$", "$\\hat{m}_0^{du-PC}$", "$\\hat{m}_0^{du-Poly}(2, 1/2)$",
+                                                      "$\\hat{m}_0^{mid-Storey}$", "$\\hat{m}_0^{mid-PC}$", "$\\hat{m}_0^{mid-Poly}(2, 1/2)$",
+                                                      "$\\hat{m}_0^{rand-Storey}$", "$\\hat{m}_0^{rand-PC}$", "$\\hat{m}_0^{rand-Poly}(2, 1/2)$")))) +
+          # theme(axis.text.x=element_blank(), axis.ticks.x=element_blank()) +
+          labs(x = TeX("$\\pi_{0}$"), y = TeX("$\\hat{\\pi}_{0}$")) +
+          theme(legend.text.align = 0)
+  
+  plot_name = gsub(" " , "", paste("../../../xp_plot/simu/estimations/FET/", gsub(" ", "_", paste("disc_comparison_p3", as.character(p3), sep="_")), ".png"))
+  ggsave(filename = plot_name, plot = plot_, width = 16, height = 10, units = "cm")
+  
+}
+```
+
+```{r}
+plot_
+```
+
+

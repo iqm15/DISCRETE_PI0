@@ -1,0 +1,129 @@
+---
+title: "empirical mse"
+output: html_document
+---
+
+```{r}
+library(latex2exp)
+library(ggplot2)
+```
+
+```{r}
+pi0 = 0.6
+nb_methods <- 6
+nb_mu1 <- 7
+```
+
+```{r}
+mu1_grid <- seq(0, 3, 0.5)
+mu1_grid
+```
+
+```{r}
+file_names <- c(
+"../../xp_data/gaussian/estimators/data_estimates_mu1_0_nulls_proportion_study_2023-03-16_08:52:22.csv",
+"../../xp_data/gaussian/estimators/data_estimates_mu1_0.5_nulls_proportion_study_2023-03-16_08:54:08.csv",
+"../../xp_data/gaussian/estimators/data_estimates_mu1_1_nulls_proportion_study_2023-03-16_08:56:51.csv",
+"../../xp_data/gaussian/estimators/data_estimates_mu1_1.5_nulls_proportion_study_2023-03-16_08:59:46.csv",
+"../../xp_data/gaussian/estimators/data_estimates_mu1_2_nulls_proportion_study_2023-03-16_09:02:37.csv",
+"../../xp_data/gaussian/estimators/data_estimates_mu1_2.5_nulls_proportion_study_2023-03-16_09:05:25.csv",
+"../../xp_data/gaussian/estimators/data_estimates_mu1_3_nulls_proportion_study_2023-03-16_09:08:11.csv"
+)
+```
+
+```{r}
+
+data_bias <- matrix(data = NA, nrow = nb_methods, ncol = nb_mu1, byrow = FALSE)  
+data_var <- matrix(data = NA, nrow = nb_methods, ncol = nb_mu1, byrow = FALSE)
+
+# test <- read.csv(file_names[1])
+# data_bias[, 1] <- test$method[1:6]
+# # data_mean
+# 
+# data_var[, 1] <- test$method[1:6]
+# data_var
+
+for (i in 1:length(file_names)) {
+  
+  df <- read.csv(file_names[i])
+  df <- data.frame(df$method, df$V7)
+  
+  mean_data <- aggregate(.~df.method, data=df, mean)
+  var_data <- aggregate(.~df.method, data=df, var)
+  
+  data_bias[, i ] <- (mean_data$df.V7 - pi0)
+  data_var[, i ] <- var_data$df.V7
+
+}
+```
+
+```{r}
+
+data_bias_storey <- as.numeric(data_bias[6, 1:7])
+data_bias_pc_dm <- as.numeric(data_bias[3, 1:7])
+data_bias_hyb_pc_sto <- as.numeric(data_bias[1, 1:7])
+data_bias_pc_quad <- as.numeric(data_bias[4, 1:7])
+data_bias_pc_zzd <- as.numeric(data_bias[5, 1:7])
+data_bias_hyb_quad_storey <- as.numeric(data_bias[2, 1:7])
+
+
+
+
+data_var_storey <- as.numeric(data_var[6, 1:7])
+data_var_pc_dm <- as.numeric(data_var[3, 1:7])
+data_var_hyb_pc_sto <- as.numeric(data_var[1, 1:7])
+data_var_pc_quad <- as.numeric(data_var[4, 1:7])
+data_var_pc_zzd <- as.numeric(data_var[5, 1:7])
+data_var_hyb_quad_storey <- as.numeric(data_var[2, 1:7])
+```
+
+```{r}
+bias_data <- data.frame(c(data_bias_pc_dm**2, data_bias_storey**2, data_bias_hyb_pc_sto**2, data_bias_pc_quad**2, data_bias_hyb_quad_storey**2))
+names(bias_data)[1] <- "bias"
+bias_data["method"] <- rep(c("PC", "STOREY", "PC_STO", "QUAD", "QUAD_STO"), each = length(mu1_grid))
+bias_data["mu1"] <- rep(mu1_grid, 5)
+bias_data
+```
+
+```{r}
+plot_bias <- ggplot(data = bias_data, aes(x=mu1, y=bias, group=method, color=method)) +
+             geom_line() +
+             labs(x = TeX("$\\mu_{1}$"), y = "Bias")
+
+plot_bias
+```
+
+
+```{r}
+var_data <- data.frame(c(data_var_pc_dm, data_var_storey, data_var_hyb_pc_sto, data_var_pc_quad, data_var_hyb_quad_storey))
+names(var_data)[1] <- "var"
+var_data["method"] <- rep(c("PC", "STOREY", "PC_STO", "QUAD", "QUAD_STO"), each = length(mu1_grid))
+var_data["mu1"] <- rep(mu1_grid, 5)
+var_data
+```
+
+
+```{r}
+plot_var <- ggplot(data = var_data, aes(x=mu1, y=var, group=method, color=method)) +
+            geom_line() +
+            labs(x = TeX("$\\mu_{1}$"), y = "Variance")
+
+plot_var
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

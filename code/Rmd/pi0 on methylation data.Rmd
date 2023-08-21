@@ -1,0 +1,130 @@
+---
+title: "pi0 on Heller data"
+output: html_document
+---
+
+```{r}
+library(DiscreteFDR)
+library(fdrDiscreteNull)
+library(ggplot2)
+library(tidyr)
+source("../scripts/utils.R")
+source("../scripts/estimators.R")
+source("../scripts/mid_p-randomized_pvalues.R")
+```
+
+```{r}
+data("listerdata")
+df <- listerdata
+df.formatted <- fisher.pvalues.support(counts = df, alternative="two.sided", input = "HG2011")
+
+pvalues <- df.formatted$raw
+
+pCDFlist <- df.formatted$support
+
+
+plot(pvalues)
+```
+
+```{r}
+# params 
+lambda <- 0.5
+r = 2
+ m = length(pvalues)
+```
+
+```{r}
+# base estimators 
+PC_estim <- PC_new_DM(pvalues)
+Storey_estim <- Storey(pvalues, lambda)
+Poly_estim <- poly_PC_STOREY(pvalues, lambda, r)
+Poly_estim_1 <- poly_PC_STOREY(pvalues, lambda, r=1)
+```
+
+```{r}
+PC_estim / m
+Storey_estim / m
+Poly_estim / m 
+Poly_estim_1 / m 
+```
+
+
+```{r}
+# rescaled estimators
+Storey_res_estim <- resc_estim(pvalues, pCDFlist, g_poly, lambda=lambda, r=0)
+PC_res_estim <- resc_estim(pvalues, pCDFlist, g_pc)
+Poly_res_estim <- resc_estim(pvalues, pCDFlist, g_poly, lambda=lambda, r=r)
+Poly_res_estim_1 <- resc_estim(pvalues, pCDFlist, g_poly, lambda=lambda, r=1)
+```
+
+```{r}
+PC_res_estim / m
+Storey_res_estim / m
+Poly_res_estim / m
+Poly_res_estim_1 / m
+```
+
+```{r}
+# compute midpvalues
+midp <- midp.values(pCDFlist, pvalues)
+```
+
+```{r}
+# mid-p rescaled estimators 
+lambda = 0.25
+Storey_midpres_estim <- resc_estim(midp$obs_midp, pCDFlist, g_poly, lambda=lambda, r=0, pvaluesupportlist = midp$midpsupport)
+PC_midpres_estim <- resc_estim(midp$obs_midp, pCDFlist, g_pc, pvaluesupportlist = midp$midpsupport)
+Poly_midpres_estim <- resc_estim(midp$obs_midp, pCDFlist, g_poly, lambda=lambda, r=r, pvaluesupportlist = midp$midpsupport)
+Poly_midpres_estim_1 <- resc_estim(midp$obs_midp, pCDFlist, g_poly, lambda=lambda, r=1, pvaluesupportlist = midp$midpsupport)
+```
+
+```{r}
+PC_midpres_estim / m
+Storey_midpres_estim / m
+Poly_midpres_estim / m
+Poly_midpres_estim_1 / m
+```
+
+
+```{r}
+# randomized estimators 
+lambda = 0.5
+PC_rand_estim <- PC_randomized(pvalues, pCDFlist) 
+Storey_rand_estim <- Storey_randomized(pvalues, pCDFlist, lambda)
+Poly_rand_estim <- Poly_randomized(pvalues, pCDFlist, lambda, r)
+Poly_rand_estim_1 <- Poly_randomized(pvalues, pCDFlist, lambda, r=1)
+```
+
+```{r}
+PC_rand_estim / m
+Storey_rand_estim / m
+Poly_rand_estim / m
+Poly_rand_estim_1 / m
+```
+
+###########################################################################################################
+How to choose lambda ? 
+```{r}
+# lambda_grid <- seq(0, 1, 0.1)
+# Storey_base_estims <- c()
+# Storey_res_estims <- c()
+# 
+# for (i in lambda_grid) {
+#   Storey_res_estims <- c(Storey_res_estims, Storey_res(raw_pvalues, i, CDF))
+#   Storey_base_estims <- c(Storey_base_estims, Storey(raw_pvalues, i) / length(raw_pvalues))
+# }
+# 
+
+```
+
+
+```{r}
+
+# data.pi0 <- cbind.data.frame(lambda_grid, Storey_base_estims, Storey_res_estims) 
+# data.pi0_ <- gather(data.pi0, key = method, Storey_base_estims, Storey_res_estims, value = pi0.est)
+# 
+# plot <- ggplot(data.pi0_, aes(lambda_grid, pi0.est, color = method)) 
+# plot + geom_line() + geom_abline(intercept = 1, slope = 0) + xlim(0, 0.75) + ylim(0, 4)
+
+```
+

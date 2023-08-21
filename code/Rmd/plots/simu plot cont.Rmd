@@ -1,0 +1,142 @@
+---
+title: "simu plot for paper"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(latex2exp)
+library(RColorBrewer)
+library(ggpubr)
+```
+
+```{r}
+nb_run = 1000
+nb_methods = 6
+pi0_seq <- seq(0.1, 0.9, 0.1)
+mu1_seq <- c(0, 0.5, 1, 1.5, 2, 2.5, 3)
+```
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Estimator boxplot 
+```{r}
+file_names_1 <- c(
+"../../../xp_data/gaussian/estimators/data_estimates_mu1_0_2023-04-17_14:03:59.csv",
+"../../../xp_data/gaussian/estimators/data_estimates_mu1_0.5_2023-04-17_14:05:54.csv",
+"../../../xp_data/gaussian/estimators/data_estimates_mu1_1_2023-04-17_14:08:53.csv",
+"../../../xp_data/gaussian/estimators/data_estimates_mu1_1.5_2023-04-17_14:12:05.csv",
+"../../../xp_data/gaussian/estimators/data_estimates_mu1_2_2023-04-17_14:15:17.csv",
+"../../../xp_data/gaussian/estimators/data_estimates_mu1_2.5_2023-04-17_14:18:27.csv",
+"../../../xp_data/gaussian/estimators/data_estimates_mu1_3_2023-04-17_14:21:35.csv"
+)
+```
+
+```{r}
+pi0_1 = rep(pi0_seq, each = nb_run * nb_methods)
+test_1 <- read.csv(file_names_1[1])
+Estimator <- rep(test_1$method, length(pi0_seq))
+```
+
+```{r}
+for (i in 1:length(file_names_1)) {
+  
+  mu_1 <- mu1_seq[i]
+  df <- read.csv(file_names_1[i])
+  estimators <- c(df$V2, df$V3, df$V4, df$V5, df$V6, df$V7, df$V8, df$V9, df$V10)
+  new_df <- data.frame(Estimator, estimators, pi0_1)
+  new_df <- new_df %>% filter(Estimator != "QUAD")
+  new_df <- new_df %>% filter(Estimator != "PC_ZZD")
+  new_df$pi0 <- as.character(new_df$pi0)
+  new_df$Estimator <- factor(new_df$Estimator , levels = c("STOREY", "PC", "PC_STOREY", "QUAD_STOREY"))
+
+  plot_1 <- ggplot(new_df, aes(x=pi0, y=estimators, color=Estimator)) +
+          
+          geom_boxplot() +
+          geom_segment(aes(x = as.character(0.05), y = 0.1, xend = as.character(0.15), yend = 0.1)) +
+          geom_segment(aes(x = as.character(0.15), y = 0.2, xend = as.character(0.25), yend = 0.2)) +
+          geom_segment(aes(x = as.character(0.25), y = 0.3, xend = as.character(0.35), yend = 0.3)) +
+          geom_segment(aes(x = as.character(0.35), y = 0.4, xend = as.character(0.45), yend = 0.4)) +
+          geom_segment(aes(x = as.character(0.45), y = 0.5, xend = as.character(0.55), yend = 0.5)) +
+          geom_segment(aes(x = as.character(0.55), y = 0.6, xend = as.character(0.65), yend = 0.6)) +
+          geom_segment(aes(x = as.character(0.65), y = 0.7, xend = as.character(0.75), yend = 0.7)) +
+          geom_segment(aes(x = as.character(0.75), y = 0.8, xend = as.character(0.85), yend = 0.8)) +
+          geom_segment(aes(x = as.character(0.85), y = 0.9, xend = as.character(0.95), yend = 0.9)) +
+          scale_x_discrete(breaks=c("0.1","0.2","0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"),
+                           labels=c("0.1","0.2","0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) + 
+    
+          scale_colour_discrete(limits = c("STOREY", "PC", "PC_STOREY", "QUAD_STOREY"), 
+                                labels = unname(TeX(c("$\\hat{m}_0^{Storey}$", "$\\hat{m}_0^{PC}$", "$\\hat{m}_0^{Poly}(1, 1/2)$", "$\\hat{m}_0^{Poly}(2, 1/2)$")))) +
+
+          # theme(axis.text.x=element_blank(), axis.ticks.x=element_blank()) +
+          labs(x = TeX("$\\pi_{0}$"), y = TeX("$\\hat{\\pi}_{0}$")) +
+          theme(legend.text.align = 0)
+  
+  
+  plot_name = gsub(" " , "", paste("../../../xp_plot/simu/estimations/gaussian/", gsub(" ", "_", paste("estimation_mu_1", as.character(mu_1), sep="_")), ".png"))
+  ggsave(filename = plot_name, plot = plot_1, width = 16, height = 10, units = "cm")
+  
+}
+```
+
+```{r}
+plot_1
+```
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Power boxplot
+
+```{r}
+file_names_2 <- c(
+"../../../xp_data/gaussian/power/data_power_mu1_0.5_2023-04-17_14:05:54.csv",
+"../../../xp_data/gaussian/power/data_power_mu1_0.5_2023-04-17_14:05:54.csv",
+"../../../xp_data/gaussian/power/data_power_mu1_1_2023-04-17_14:08:53.csv",
+"../../../xp_data/gaussian/power/data_power_mu1_1.5_2023-04-17_14:12:05.csv",
+"../../../xp_data/gaussian/power/data_power_mu1_2_2023-04-17_14:15:18.csv",
+"../../../xp_data/gaussian/power/data_power_mu1_2.5_2023-04-17_14:18:27.csv",
+"../../../xp_data/gaussian/power/data_power_mu1_3_2023-04-17_14:21:35.csv"
+)
+```
+
+```{r}
+pi0_2 = rep(pi0_seq, each = nb_run * (nb_methods + 2))
+test_2 <- read.csv(file_names_2[1])
+Procedure <- rep(test_2$method, length(pi0_seq))
+```
+
+
+```{r}
+for (i in 1:length(file_names_2)) {
+  
+  mu_1 <- mu1_seq[i]
+  df <- read.csv(file_names_2[3])
+  power <- c(df$V2, df$V3, df$V4, df$V5, df$V6, df$V7, df$V8, df$V9, df$V10)
+  new_df <- data.frame(Procedure, power, pi0_2)
+  new_df <- new_df %>% filter(Procedure != "QUAD")
+  new_df <- new_df %>% filter(Procedure != "PC_ZZD")
+  new_df$pi0 <- as.character(new_df$pi0)
+  new_df$Procedure <- factor(new_df$Procedure , levels = c("BH", "oracle_ABH", "STOREY", "PC", "PC_STOREY", "QUAD_STOREY"))
+
+  plot_2 <- ggplot(new_df, aes(x=pi0, y=power, color=Procedure)) +
+
+          geom_boxplot() +
+          scale_x_discrete(breaks=c("0.1","0.2","0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"),
+                           labels=c("0.1","0.2","0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) + 
+    
+          scale_colour_discrete(limits = c("BH", "oracle_ABH", "STOREY", "PC", "PC_STOREY", "QUAD_STOREY"), 
+                                labels = unname(TeX(c("BH", "ABH(m_{0})", "ABH(\\hat{m}_{0}^{Storey})",    "ABH(\\hat{m}_{0}^{PC})", "ABH(\\hat{m}_{0}^{Poly}(1, 1/2))", "ABH(\\hat{m}_{0}^{Poly}(2, 1/2))")))) +
+          # theme(axis.text.x=element_blank(), axis.ticks.x=element_blank()) + 
+          labs(x = TeX("$\\pi_{0}$"), y = "Power") +
+          theme(legend.text.align = 0)
+  
+  plot_name = gsub(" " , "", paste("../../../xp_plot/simu/power/gaussian/", gsub(" ", "_", paste("power_mu_1", as.character(mu_1), sep="_")), ".png"))
+  ggsave(filename = plot_name, plot = plot_2, width = 16, height = 10, units = "cm")
+  
+}
+```
+
+```{r}
+plot_2
+```
+

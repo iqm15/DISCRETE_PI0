@@ -1,0 +1,136 @@
+---
+title: "Compare g transformations"
+output: html_document
+---
+
+```{r}
+source("../../scripts/utils.R")
+library(latex2exp)
+library(wesanderson)
+```
+
+```{r}
+x <- seq(0, 1, 0.1)
+```
+
+```{r}
+g_pc_y <- g_pc(x)
+g_storey_y <- g_storey(x, lambda = 0.5)
+g_hyb_y <- g_sto_pc(x, lambda = 0.5)
+g_quad_y <- g_quad(x)
+g_poly_y <- g_poly(x, lambda = 0.5, r =2)
+```
+
+```{r}
+datapc <- data.frame(x, g_pc_y)
+names(datapc)[1] =  "x"
+names(datapc)[2] =  "y_pc"
+
+datasto <- data.frame(x, g_storey_y)
+names(datasto)[1] =  "x"
+names(datasto)[2] =  "y_storey"
+
+datahyb <- data.frame(x, g_hyb_y)
+names(datahyb)[1] =  "x"
+names(datahyb)[2] =  "y_hyb"
+
+dataquad <- data.frame(x, g_quad_y)
+names(dataquad)[1] =  "x"
+names(dataquad)[2] =  "y_quad"
+
+datapoly <- data.frame(x, g_poly_y)
+names(datapoly)[1] =  "x"
+names(datapoly)[2] =  "y_poly"
+
+```
+values = c("y_pc" = "red2", "y_storey" = "yellow4", "y_hyb" = "blue", "y_poly" = "green3")
+
+
+```{r}
+function_names <- rep(c(TeX("$g^{PC}$"), TeX("$g_{\\lambda}^{Storey}$"), TeX("$g_{(r=1, \\lambda)}^{Poly}$"), TeX("$g_{(r=2, \\lambda)}^{Poly}$")), each = length(x))
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+datapoly
+```
+unname(unname(TeX(c("$g^{PC}$", "$g_{\\lambda}^{Storey}$", "$g_{(r=1, \\lambda)}^{Poly}$", "$g_{(r=2, \\lambda)}^{Poly}$"))))
+```{r}
+plot_ <- ggplot() +
+  geom_line(data = datapc, aes(x = x, y = y_pc, color = "y_pc"), lwd = 1) +
+  geom_line(data = datasto, aes(x = x, y = y_storey, color = "y_storey"), lwd = 1) +
+  geom_line(data = datahyb, aes(x = x, y = y_hyb, color = "y_hyb"), lwd = 1) +
+  geom_line(data = datapoly, aes(x = x, y = y_poly, color = "y_poly"), lwd = 1) +
+  scale_color_manual(
+    name = "Transformation",
+    values = c("y_pc" = "red2", "y_storey" = "yellow4", "y_hyb" = "blue", "y_poly" = "green3"),
+    labels = c("PC", "STOREY", "HYBRIB", "POLY")
+  ) +
+  xlab(TeX("$u$")) + ylab(TeX("$g(u)$"))
+
+plot_
+```
+
+
+
+```{r}
+plot_ <- ggplot() +
+  geom_line(data = datapc, aes(x = x, y = y_pc, color = "red2"), lwd = 1) +
+  geom_line(data = datasto, aes(x = x, y = y_storey, color = "yellow4"), lwd = 1) +
+  geom_line(data = datahyb, aes(x = x, y = y_hyb, color = "blue"), lwd = 1) +
+  geom_line(data = datapoly, aes(x = x, y = y_poly,  color = "green3"), lwd = 1) +
+  scale_color_manual(
+    name = "Transformation",
+    values = c("red2", "yellow4", "blue", "green3"),
+    labels = unname(unname(TeX(c("$g^{PC}$", "$g_{\\lambda}^{Storey}$", "$g_{(r=1, \\lambda)}^{Poly}$", "$g_{(r=2, \\lambda)}^{Poly}$"))))
+  ) +
+  xlab(TeX("$u$")) + ylab(TeX("$g(u)$"))
+
+plot_
+```
+
+
+
+```{r}
+plot_ <- ggplot() +
+  geom_line(data = datapc, aes(x = x, y = y_pc, color = "y_pc"), lwd = 1) +
+  geom_line(data = datasto, aes(x = x, y = y_storey, color = "y_storey"), lwd = 1) +
+  geom_line(data = datahyb, aes(x = x, y = y_hyb, color = "y_hyb"), lwd = 1) +
+  geom_line(data = datapoly, aes(x = x, y = y_poly, color = "y_poly"), lwd = 1) +
+  scale_color_manual(
+    name = "Transformation",
+    values = c(y_pc = "red2", y_storey = "yellow4", y_hyb = "blue", y_poly = "green3"),
+    labels = unname(unname(TeX(c("$g_{(r=1, \\lambda)}^{Poly}$", "$g_{(r=2, \\lambda)}^{Poly}$"))))
+  ) +
+  xlab(TeX("$u$")) + ylab(TeX("$g(u)$"))
+
+plot_
+```
+
+
+```{r}
+
+
+plot_ <-  ggplot() +
+  geom_line(data = datapc, aes(x = x, y = y_pc, color = "y_pc"), lwd = 1) +
+  geom_line(data = datasto, aes(x = x, y = y_storey, color = "y_storey"), lwd = 1) +
+  geom_line(data = datahyb, aes(x = x, y = y_hyb, color = "y_hyb"), lwd = 1) +
+  geom_line(data = datapoly, aes(x = x, y = y_poly, color = "y_poly"), lwd = 1) +
+  scale_color_manual(name = "Transformation", values = c("y_pc" = "red2", "y_storey" = "yellow4", "y_hyb" = "blue", "y_poly" = "green3"), labels = unname(unname(TeX(c("$g^{PC}$", "$g_{\\lambda}^{Storey}$", "$g_{(r=1, \\lambda)}^{Poly}$", "$g_{(r=2, \\lambda)}^{Poly}$"))))) +
+  xlab(TeX("$u$")) + ylab(TeX("$g(u)$"))
+  
+
+plot_
+```
+
+```{r}
+# plot_name = "../../../xp_plot/g_functions.png"
+# ggsave(filename = plot_name, plot = plot_, width = 16, height = 10, units = "cm")
+```
+

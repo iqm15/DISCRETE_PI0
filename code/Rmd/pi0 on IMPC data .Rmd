@@ -1,0 +1,133 @@
+---
+title: "pi0 on IMPC data"
+output: html_document
+---
+
+```{r}
+library(OnlineSuperUnif)
+library(DiscreteFDR)
+source("../scripts/mid_p-randomized_pvalues.R")
+source("../scripts/estimators.R")
+source("../scripts/utils.R")
+```
+
+```{r}
+# Male_df <- read.csv("../../../online_superunif_mt/xp_data/my_impc_data/impc_male_df.csv")
+Fem_df <-  read.csv("../../../online_superunif_mt/xp_data/my_impc_data/impc_female_df.csv")
+```
+
+```{r}
+# Male_test <- fisher.pvalues.support(Male_df, alternative = "greater", input = "noassoc")
+Fem_test <- fisher.pvalues.support(Fem_df, alternative = "greater", input = "noassoc")
+```
+
+```{r}
+pvalues <- Fem_test$raw
+pCDFlist <- Fem_test$support
+```
+
+```{r}
+plot(pvalues)
+```
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+```{r}
+# param 
+lambda = 0.5
+r = 2
+
+m = length(pvalues)
+
+```
+
+```{r}
+# base estimators 
+PC_estim <- PC_new_DM(pvalues)
+Storey_estim <- Storey(pvalues, lambda)
+Poly_estim <- poly_PC_STOREY(pvalues, lambda, r)
+Poly_estim_1 <- poly_PC_STOREY(pvalues, lambda, r=1)
+```
+
+```{r}
+PC_estim / m
+Storey_estim / m
+Poly_estim / m 
+Poly_estim_1 / m 
+```
+
+
+```{r}
+# rescaled estimators
+
+Storey_res_estim <- resc_estim(pvalues, pCDFlist, g_poly, lambda=lambda, r=0)
+PC_res_estim <- resc_estim(pvalues, pCDFlist, g_pc)
+Poly_res_estim <- resc_estim(pvalues, pCDFlist, g_poly, lambda=lambda, r=r)
+Poly_res_estim_1 <- resc_estim(pvalues, pCDFlist, g_poly, lambda=lambda, r=1)
+```
+
+```{r}
+PC_res_estim / m
+Storey_res_estim / m
+Poly_res_estim / m
+Poly_res_estim_1 / m
+```
+
+```{r}
+# compute midpvalues
+midp <- midp.values(pCDFlist, pvalues)
+```
+
+```{r}
+# mid-p rescaled estimators 
+lambda = 0.25
+Storey_midpres_estim <- resc_estim(midp$obs_midp, pCDFlist, g_poly, lambda=lambda, r=0, pvaluesupportlist = midp$midpsupport)
+PC_midpres_estim <- resc_estim(midp$obs_midp, pCDFlist, g_pc, pvaluesupportlist = midp$midpsupport)
+Poly_midpres_estim <- resc_estim(midp$obs_midp, pCDFlist, g_poly, lambda=lambda, r=r, pvaluesupportlist = midp$midpsupport)
+Poly_midpres_estim_1 <- resc_estim(midp$obs_midp, pCDFlist, g_poly, lambda=lambda, r=1, pvaluesupportlist = midp$midpsupport)
+```
+
+```{r}
+pCDFlist[[41]]
+midp$midpsupport[[41]]
+```
+
+```{r}
+PC_midpres_estim / m
+Storey_midpres_estim / m
+Poly_midpres_estim / m
+Poly_midpres_estim_1 / m
+```
+
+
+```{r}
+# randomized estimators 
+lamnbda = 0.5
+PC_rand_estim <- PC_randomized(pvalues, pCDFlist) 
+Storey_rand_estim <- Storey_randomized(pvalues, pCDFlist, lambda)
+Poly_rand_estim <- Poly_randomized(pvalues, pCDFlist, lambda, r)
+Poly_rand_estim_1 <- Poly_randomized(pvalues, pCDFlist, lambda, r=1)
+```
+
+```{r}
+PC_rand_estim / m
+Storey_rand_estim / m
+Poly_rand_estim / m
+Poly_rand_estim_1 / m
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,19 @@
+{
+  "nb_run": 100,
+  "m": 10000,
+  "alpha": 0.05,
+  "nulls_proportion": {
+    "begin": 0.1,
+    "end" : 0.9,
+    "by" : 0.1
+  },
+  "mu1": {
+    "begin": 0,
+    "end" : 3,
+    "by" : 0.5
+  },
+  "C": 1.002366,
+  "s": 521,
+  "lambda": 0.5,
+  "param_interest": "nulls_proportion"
+}
